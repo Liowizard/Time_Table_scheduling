@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Timetables</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        th {
+            background-color: #f2f2f2;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+    </style>
+</head>
+<body>
+    {% for section, timetable_section in timetables.items() %}
+        <h1>Timetable for {{ section }}</h1>
+        <table>
+            <tr>
+                <th>Day/Time</th>
+                <th>1st Period</th>
+                <th>2nd Period</th>
+                <th>3rd Period</th>
+                <th>4th Period</th>
+                <th>5th Period</th>
+                <th>6th Period</th>
+                <th>7th Period</th>
+                <th>8th Period</th>
+            </tr>
+            {% for day, timetable_day in timetable_section.items() %}
+                <tr>
+                    <td>{{ day }}</td>
+                    {% for slot, timetable_slot in timetable_day.items() %}
+                        <td class="{% if timetable_slot|length > 1 %}unique-cell{% endif %}">
+                            {% for subject, teachers in timetable_slot.items() %}
+                                {% for teacher in teachers %}
+                                    <div>{{ subject }} - {{ teacher }}</div>
+                                {% endfor %}
+                            {% endfor %}
+                        </td>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+        </table>
+    {% endfor %}
+</body>
+</html>
