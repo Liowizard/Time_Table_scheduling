@@ -11,6 +11,11 @@
             text-align: left;
             border-bottom: 1px solid #ddd;
         }
+        .grouping-day,.each-day{
+            border:2px solid red ;
+            background-color: lightblue;
+
+        }
     </style>
 </head>
 <body>
@@ -24,8 +29,8 @@
             <th>Teacher</th>
         </tr>
         {% for day in timetable.days %}
-        <tr>
-            <td rowspan="{{ day.slots|length }}">{{ day.day }}</td>
+        <tr class="each-day">
+            <td class="grouping-day" rowspan="{{ day.slots|length }}">{{ day.day }}</td>
             {% for slot in day.slots %}
             <td>{{ slot.slot }}</td>
             {% if slot.subjects %}
@@ -47,6 +52,6 @@
         {% endfor %}
         {% endfor %}
     </table>
-    {% endfor %}
+    {% endfor %}rowspan
 </body>
 </html>
