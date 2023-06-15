@@ -13,8 +13,8 @@ def create_timetables():
         'English': [60, "theory"],
         'History': [60, "theory"],
         'Bio': [60, "theory"],
-        'Physics_Lab': [200, "Lab"],
-        'Chemistry_Lab': [90, "Lab"]
+        'Physics_Lab': [90, "Lab"],
+        'Chemistry_Lab': [60, "Lab"]
     }
     sections = ['sec_A', 'sec_B', 'sec_C']
     subject_teachers = {
@@ -24,7 +24,7 @@ def create_timetables():
         'English': ['Jennie Crigler', 'Gladys Swon'],
         'History': ['Ruth Carman', 'Lela Pat Buckman'],
         'Bio': ['Lio', 'Fin'],
-        'Physics_Lab': ['Mrs. A. T. Whitecotton', 'Geraldine Carpenter','helomin'],
+        'Physics_Lab': ['Mrs. A. T. Whitecotton', 'Geraldine Carpenter'],
         'Chemistry_Lab': ['John Doe', 'Jane Smith']
     }
     slots_per_day = 8  # Total number of hours
@@ -48,13 +48,16 @@ def create_timetables():
 
     # Each subject should have the required number of classes per week
     for subject in list(subjects.keys()):
-        for section in sections:
-            if subject in ['Physics_Lab', 'Chemistry_Lab']:
-                model.Add(sum(timetable[(day, slot, subject, section, teacher)]
-                              for day in days for slot in range(slots_per_day) for teacher in subject_teachers[subject]) == 1)
-            else:
+        if subject not in ['Physics_Lab', 'Chemistry_Lab']:
+            for section in sections:
                 model.Add(sum(timetable[(day, slot, subject, section, teacher)]
                               for day in days for slot in range(slots_per_day) for teacher in subject_teachers[subject]) == 5)
+
+    # Lab subjects should be scheduled once in 5 days for each section
+    for subject in ['Physics_Lab', 'Chemistry_Lab']:
+        for section in sections:
+            model.Add(sum(timetable[(day, slot, subject, section, teacher)]
+                          for day in days for slot in range(slots_per_day) for teacher in subject_teachers[subject]) == 1)
 
     # No two classes should be scheduled at the same time
     for day in days:
@@ -75,18 +78,6 @@ def create_timetables():
                         model.Add(sum(timetable[(day, slot, subject, section, teacher)]
                                       for slot in range(slots_per_day)) <= 2)
 
-    # Subjects in each section should be different
-    for day in days:
-        for slot in range(slots_per_day):
-            for subject in list(subjects.keys()):
-                for section1 in sections:
-                    for section2 in sections:
-                        if section1 != section2:
-                            model.Add(sum(timetable[(day, slot, subject, section1, teacher)]
-                                             for teacher in subject_teachers[subject]) +
-                                      sum(timetable[(day, slot, subject, section2, teacher)]
-                                             for teacher in subject_teachers[subject]) <= 1)
-
     # Teachers should not be assigned to multiple classes at the same time
     for day in days:
         for slot in range(slots_per_day):
@@ -95,23 +86,14 @@ def create_timetables():
                     model.Add(sum(timetable[(day, slot, subject, section, teacher)]
                                  for subject in list(subjects.keys()) if teacher in subject_teachers[subject]) <= 1)
 
-    # Add a constraint to avoid consecutive slots with the same subject
-    for day in days:
-        for slot in range(slots_per_day - 1):
-            for section in sections:
-                for subject in list(subjects.keys()):
-                    for teacher in subject_teachers[subject]:
-                        next_slot = slot + 1
-                        current_subject_var = timetable[(day, slot, subject, section, teacher)]
-                        next_subject_var = timetable[(day, next_slot, subject, section, teacher)]
-                        model.AddImplication(current_subject_var, next_subject_var.Not())
-                        model.AddImplication(next_subject_var, current_subject_var.Not())
-
+    # Avoid consecutive classes for the same subject and section
     for day in days:
         for section in sections:
-            for teacher in set(sum(subject_teachers.values(), [])):
-                minutes_in_day = sum(subjects[subject][0] * sum(timetable[(day, slot, subject, section, teacher)] for slot in range(slots_per_day)) for subject in subjects if teacher in subject_teachers[subject])
-                model.Add(minutes_in_day <= minutes_per_day)
+            for subject in list(subjects.keys()):
+                for teacher in subject_teachers[subject]:
+                    for slot in range(slots_per_day - 1):
+                        if (day, slot, subject, section, teacher) in timetable and (day, slot + 1, subject, section, teacher) in timetable:
+                            model.Add(timetable[(day, slot, subject, section, teacher)] + timetable[(day, slot + 1, subject, section, teacher)] <= 1)
 
     # Create the solver and solve the model
     solver = cp_model.CpSolver()
@@ -140,7 +122,7 @@ def create_timetables():
                                         'type': subjects[subject][1]
                                     })
                                 else:
-                                    total_minutes -= duration  # Subtract the duration from total minutes
+                                    total_minutes -= duration  # Exclude the current slot from exceeding the limit
                         timetable_slot[subject] = timetable_subject
                     timetable_day[slot] = timetable_slot
                 timetable_section[day] = timetable_day
@@ -148,18 +130,24 @@ def create_timetables():
 
     return timetables
 
-# Call the function to generate the timetables
+
+# Example usage
 timetables = create_timetables()
 
+if timetables is not None:
+    for section, timetable_section in timetables.items():
+        print(f"Timetable for section {section}:")
+        for day, timetable_day in timetable_section.items():
+            print(f"Day: {day}")
+            for slot, timetable_slot in timetable_day.items():
+                print(f"Slot: {slot}")
+                for subject, classes in timetable_slot.items():
+                    for cls in classes:
+                        if cls['teacher']:
+                            print(f"Subject: {subject}")
+                            print(f"  Teacher: {cls['teacher']}, Duration: {cls['duration']}, Type: {cls['type']}")
+                print()
+            print()
+else:
+    print("No feasible solution found.")
 
-# # Print the generated timetables
-# for section, timetable_section in timetables.items():
-#     print(f"Timetable for {section}:")
-#     for day, timetable_day in timetable_section.items():
-#         print(f"\n{day}:")
-#         for slot, timetable_slot in timetable_day.items():
-#             print(f"\nSlot {slot + 1}:")
-#             for subject, timetable_subject in timetable_slot.items():
-#                 print(f"\n{subject}:")
-#                 for session in timetable_subject:
-#                     print(f"Teacher: {session['teacher']}, Duration: {session['duration']}, Type: {session['type']}")
