@@ -13,7 +13,7 @@ def create_timetables():
         'English': [60, "theory"],
         'History': [60, "theory"],
         'Bio': [60, "theory"],
-        'Physics_Lab': [90, "Lab"],
+        'Physics_Lab': [200, "Lab"],
         'Chemistry_Lab': [90, "Lab"]
     }
     sections = ['sec_A', 'sec_B', 'sec_C']
@@ -24,7 +24,7 @@ def create_timetables():
         'English': ['Jennie Crigler', 'Gladys Swon'],
         'History': ['Ruth Carman', 'Lela Pat Buckman'],
         'Bio': ['Lio', 'Fin'],
-        'Physics_Lab': ['Mrs. A. T. Whitecotton', 'Geraldine Carpenter'],
+        'Physics_Lab': ['Mrs. A. T. Whitecotton', 'Geraldine Carpenter','helomin'],
         'Chemistry_Lab': ['John Doe', 'Jane Smith']
     }
     slots_per_day = 8  # Total number of hours
@@ -39,14 +39,7 @@ def create_timetables():
                 for section in sections:
                     for teacher in subject_teachers[subject]:
                         if (day, slot, subject, section, teacher) not in timetable:
-                            # Adjust duration based on the subject
-                            if subject in ['Physics_Lab', 'Chemistry_Lab']:
-                                duration = 90
-                            else:
-                                duration = 60
-
-                            num_slots = duration // 30
-                            for i in range(num_slots):
+                            for i in range(slots_per_day):
                                 if (day, slot + i, subject, section, teacher) not in timetable:
                                     timetable[(day, slot + i, subject, section, teacher)] = model.NewBoolVar(
                                         '{}_{}_{}_{}_{}'.format(day, slot + i, subject, section, teacher))
@@ -147,7 +140,7 @@ def create_timetables():
                                         'type': subjects[subject][1]
                                     })
                                 else:
-                                    total_minutes -= duration  # Exclude the current slot from exceeding the limit
+                                    total_minutes -= duration  # Subtract the duration from total minutes
                         timetable_slot[subject] = timetable_subject
                     timetable_day[slot] = timetable_slot
                 timetable_section[day] = timetable_day
@@ -155,10 +148,11 @@ def create_timetables():
 
     return timetables
 
-# Generate the timetables
+# Call the function to generate the timetables
 timetables = create_timetables()
 
-# Display the timetables
+
+# # Print the generated timetables
 # for section, timetable_section in timetables.items():
 #     print(f"Timetable for {section}:")
 #     for day, timetable_day in timetable_section.items():
@@ -166,5 +160,6 @@ timetables = create_timetables()
 #         for slot, timetable_slot in timetable_day.items():
 #             print(f"\nSlot {slot + 1}:")
 #             for subject, timetable_subject in timetable_slot.items():
-#                 print(f"{subject} - {timetable_subject}")
-#                 print("---")
+#                 print(f"\n{subject}:")
+#                 for session in timetable_subject:
+#                     print(f"Teacher: {session['teacher']}, Duration: {session['duration']}, Type: {session['type']}")
