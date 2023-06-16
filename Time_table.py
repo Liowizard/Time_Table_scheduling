@@ -1,4 +1,5 @@
 from ortools.sat.python import cp_model
+import json
 
 def create_timetables():
     # Create the CP model
@@ -95,6 +96,19 @@ def create_timetables():
                         if (day, slot, subject, section, teacher) in timetable and (day, slot + 1, subject, section, teacher) in timetable:
                             model.Add(timetable[(day, slot, subject, section, teacher)] + timetable[(day, slot + 1, subject, section, teacher)] <= 1)
 
+    # Avoid consecutive classes for the same subject and different teacher
+    for day in days:
+        for section in sections:
+            for subject in list(subjects.keys()):
+                teachers = subject_teachers[subject]
+                for i in range(len(teachers)):
+                    for j in range(i + 1, len(teachers)):
+                        teacher1 = teachers[i]
+                        teacher2 = teachers[j]
+                        for slot in range(slots_per_day - 1):
+                            if (day, slot, subject, section, teacher1) in timetable and (day, slot + 1, subject, section, teacher2) in timetable:
+                                model.Add(timetable[(day, slot, subject, section, teacher1)] + timetable[(day, slot + 1, subject, section, teacher2)] <= 1)
+
     # Create the solver and solve the model
     solver = cp_model.CpSolver()
     status = solver.Solve(model)
@@ -122,32 +136,63 @@ def create_timetables():
                                         'type': subjects[subject][1]
                                     })
                                 else:
-                                    total_minutes -= duration  # Exclude the current slot from exceeding the limit
-                        timetable_slot[subject] = timetable_subject
-                    timetable_day[slot] = timetable_slot
-                timetable_section[day] = timetable_day
-            timetables[section] = timetable_section
+                                    total_minutes -= duration  # Subtract the duration if total minutes exceed the limit
+                        if timetable_subject:
+                            timetable_slot[subject] = timetable_subject
+                    if timetable_slot:
+                        timetable_day[slot] = timetable_slot
+                if timetable_day:
+                    timetable_section[day] = timetable_day
+            if timetable_section:
+                timetables[section] = timetable_section
 
     return timetables
 
 
-# Example usage
-timetables = create_timetables()
 
-if timetables is not None:
+
+def timetables_data():
+    timetables = create_timetables()
+
+    # Convert the timetables to a format suitable for rendering in HTML
+    timetable_data = []
     for section, timetable_section in timetables.items():
-        print(f"Timetable for section {section}:")
+        section_data = {'section': section, 'days': []}
         for day, timetable_day in timetable_section.items():
-            print(f"Day: {day}")
+            day_data = {'day': day, 'slots': []}
             for slot, timetable_slot in timetable_day.items():
-                print(f"Slot: {slot}")
-                for subject, classes in timetable_slot.items():
-                    for cls in classes:
-                        if cls['teacher']:
-                            print(f"Subject: {subject}")
-                            print(f"  Teacher: {cls['teacher']}, Duration: {cls['duration']}, Type: {cls['type']}")
-                print()
-            print()
-else:
-    print("No feasible solution found.")
+                slot_data = {'slot': slot + 1, 'subjects': []}
+                for subject, teachers in timetable_slot.items():
+                    for teacher in teachers:
+                        slot_data['subjects'].append({'subject': subject, 'teacher': teacher})
+                day_data['slots'].append(slot_data)
+            section_data['days'].append(day_data)
+        timetable_data.append(section_data)
+        # print(timetable_data)
+
+    return timetable_data
+
+# data=timetables_data()
+
+# print(data)
+
+# with open("output.json", "w") as outfile:
+#     json.dump(data, outfile)
+
+# if timetables is not None:
+#     for section, timetable_section in timetables.items():
+#         print(f"Timetable for section {section}:")
+#         for day, timetable_day in timetable_section.items():
+#             print(f"Day: {day}")
+#             for slot, timetable_slot in timetable_day.items():
+#                 print(f"Slot: {slot}")
+#                 for subject, classes in timetable_slot.items():
+#                     for cls in classes:
+#                         if cls['teacher']:
+#                             print(f"Subject: {subject}")
+#                             print(f"  Teacher: {cls['teacher']}, Duration: {cls['duration']}, Type: {cls['type']}")
+#                 print()
+#             print()
+# else:
+#     print("No feasible solution found.")
 
