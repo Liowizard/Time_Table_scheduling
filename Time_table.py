@@ -1,13 +1,14 @@
 from ortools.sat.python import cp_model
 from collections import Counter
 import json
+import random
 
 def create_timetables():
     # Create the CP model
     model = cp_model.CpModel()
 
     # Define the variables
-    days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
+    days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
 
     subjects = {
         'Mathematics': [60, "theory", 15],
@@ -49,6 +50,7 @@ def create_timetables():
                                 if (day, i, subject, section, teacher) not in timetable:
                                     timetable[(day, i, subject, section, teacher)] = model.NewBoolVar(
                                         '{}_{}_{}_{}_{}'.format(day, i, subject, section, teacher))
+        # Add constraints...
 
     # Lab subjects should be scheduled once in 5 days for each section
     for subject in list(subjects.keys()):
@@ -77,22 +79,46 @@ def create_timetables():
                                       sum(timetable[(day, slot, subject, section2, teacher)]
                                           for subject in list(subjects.keys()) if teacher in subject_teachers[subject]) <= 1)
 
-    # Subjects should not be scheduled continuously
-    for day in days:
-        for section in sections:
-            for subject in list(subjects.keys()):
-                for teacher in subject_teachers[subject]:
-                    for slot in range(slots_per_day - 1):
-                        model.Add(
-                            timetable[(day, slot, subject, section, teacher)] +
-                            timetable[(day, slot + 1, subject, section, teacher)] <= 1
-                        )
-
     # Schedule English subject at Monday 1st slot in sec_A
     subject = 'English'
     section = 'sec_A'
     teacher = subject_teachers[subject][0]  # Assuming the first teacher in the list
     model.Add(timetable[('Monday', 0, subject, section, teacher)] == 1)
+
+    # Add constraint to avoid assigning same subject continually in all sections
+    for subject in list(subjects.keys()):
+        for day in days:
+            for slot in range(slots_per_day - 1):
+                for section1 in sections:
+                    for section2 in sections:
+                        if section1 != section2:
+                            model.Add(sum(timetable[(day, slot, subject, section1, teacher)]
+                                          for teacher in subject_teachers[subject]) +
+                                      sum(timetable[(day, slot + 1, subject, section2, teacher)]
+                                          for teacher in subject_teachers[subject]) <= 1)
+
+    # Add constraint to limit maximum 2 same subjects in the same day
+    for day in days:
+        for subject in list(subjects.keys()):
+            for section in sections:
+                # Set the probability for assigning the subject twice in a day
+                if random.random() < 0.1:  # Adjust the probability as desired (e.g., 0.1 for 10% chance)
+                    max_assignments = 2
+                else:
+                    max_assignments = 1
+
+                model.Add(sum(timetable[(day, slot, subject, section, teacher)]
+                              for slot in range(slots_per_day) for teacher in subject_teachers[subject]) <= max_assignments)
+
+    # Add constraint to avoid assigning the same subject in consecutive time slots
+    for day in days:
+        for subject in list(subjects.keys()):
+            for section in sections:
+                for slot in range(slots_per_day - 1):
+                    model.Add(sum(timetable[(day, slot, subject, section, teacher)]
+                                  for teacher in subject_teachers[subject]) +
+                              sum(timetable[(day, slot + 1, subject, section, teacher)]
+                                  for teacher in subject_teachers[subject]) <= 1)
 
     # Create the solver and solve the model
     solver = cp_model.CpSolver()
@@ -134,10 +160,7 @@ def create_timetables():
     return timetables
 
 
-
-
-
-data=create_timetables()
+# data=create_timetables()
 # print(data)
 
 def timetables_data():
