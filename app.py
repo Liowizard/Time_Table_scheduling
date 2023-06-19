@@ -10,7 +10,7 @@ app = Flask(__name__)
 def display_timetables():
     timetables = timetables_data()
 
-    return render_template('timetable.html', timetables=timetables)
+    return render_template('timetable.html', timetable_data=timetables)
     
 
 if __name__ == '__main__':
