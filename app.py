@@ -19,7 +19,9 @@ def POST_timetables():
 
 @app.route('/TimeTable')
 def Display_timetables():
-    data=data_storage[0]
+    if len(data_storage)==0:
+        return "update a data first"
+    data=data_storage[-1]
 
 
     days = data.get('days')

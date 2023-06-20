@@ -4,7 +4,7 @@ import json
 import random
 
 DISTRIBUTE_WORK_LOAD_AMONG_STAFFS = True
-
+# days = ["Monday",'tuesday','wednesday','thursday','friday']
 days = ["Monday"]
                       
 subjects = {
@@ -28,13 +28,13 @@ def create_timetables( days,subjects,sections,num_weeks):
     lab_subjects=[]
 
     for subject in subjects.keys():
-        if subjects[subject][1] == "lab" or "Lab":
+        if subjects[subject][1] == "lab":
             lab_subjects.append(subject)
 
         
 
     # Define the variables
-    # days = ["Monday",'tuesday','wednesday','thursday','friday']
+
     slots_per_day = 8  # Total number of hours
     slots_per_week = slots_per_day * len(days)
     minutes_per_day = 420 # Maximum minutes per day
@@ -91,11 +91,11 @@ def create_timetables( days,subjects,sections,num_weeks):
                                               for subject in list(subjects.keys()) if teacher in subjects[subject][3]) <= 1)
 
 
-    # Schedule English subject at Monday 1st slot in sec_A for the first week
-    subject = 'English'
-    section = 'sec_A'
-    teacher = subjects[subject][3][0]  # Assuming the first teacher in the list
-    model.Add(timetable[(0, 'Monday', 0, subject, section, teacher)] == 1)
+    # # Schedule English subject at Monday 1st slot in sec_A for the first week
+    # subject = 'English'
+    # section = 'sec_A'
+    # teacher = subjects[subject][3][0]  # Assuming the first teacher in the list
+    # model.Add(timetable[(0, 'Monday', 0, subject, section, teacher)] == 1)
 
 
     # Add constraint to avoid assigning same subject continually in all sections
@@ -187,6 +187,7 @@ def create_timetables( days,subjects,sections,num_weeks):
                             total_minutes += subjects[list(timetable_slot.keys())[0]][0]
                             timetable_day[slot] = timetable_slot
                         # If the total minutes for the day is reached, stop adding more slots
+                        # print(total_minutes)
                         if total_minutes > minutes_per_day:
                             break
                     timetable_section[day] = timetable_day
@@ -196,8 +197,19 @@ def create_timetables( days,subjects,sections,num_weeks):
         if subjects[subject][2]*len(sections) != subject_counter[subject]:
             class_check.append("bad")
 
-    print(len(class_check))
+    # print(len(class_check))
     return timetables
+
+
+
+
+
+
+
+
+
+
+
 
 
 # data=create_timetables()
