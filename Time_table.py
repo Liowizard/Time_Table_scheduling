@@ -1,6 +1,5 @@
 from ortools.sat.python import cp_model
 from collections import Counter
-import json
 import random
 
 DISTRIBUTE_WORK_LOAD_AMONG_STAFFS = True
@@ -190,6 +189,8 @@ def create_timetables( days,subjects,sections,num_weeks):
                         # print(total_minutes)
                         if total_minutes > minutes_per_day:
                             break
+                        else:
+                            print(total_minutes)
                     timetable_section[day] = timetable_day
                 timetables[(week, section)] = timetable_section
     class_check=[]
