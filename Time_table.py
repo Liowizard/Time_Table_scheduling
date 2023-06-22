@@ -1,20 +1,6 @@
 from ortools.sat.python import cp_model
 from collections import Counter
 import random
-import datetime
-
-start_time = datetime.time(8, 0)  # Start time: 8 AM
-end_time = datetime.time(16, 0)  # End time: 4 PM
-interval = datetime.timedelta(minutes=5)  # Time interval: 5 minutes
-
-times = []
-current_time = start_time
-
-while current_time < end_time:
-    times.append(current_time.strftime('%H:%M'))
-    current_time = (datetime.datetime.combine(datetime.date.today(), current_time) + interval).time()
-
-# print(times)
 
 
 DISTRIBUTE_WORK_LOAD_AMONG_STAFFS = True
@@ -49,7 +35,7 @@ def create_timetables( days,subjects,sections,num_weeks):
 
     # Define the variables
 
-    slots_per_day = len(times)  # Total number of hours
+    slots_per_day = 8  # Total number of hours
     slots_per_week = slots_per_day * len(days)
     minutes_per_day = 420 # Maximum minutes per day
 

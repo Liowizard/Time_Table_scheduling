@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Timetable</title>
+    <style>
+        /* Add any custom styling for the timetable here */
+    </style>
+</head>
+<body>
+    <table>
+        <thead>
+            <tr>
+                <th>Week</th>
+                <th>Day</th>
+                <th>Start Time</th>
+                <th>End Time</th>
+                <th>Subject</th>
+                <th>Section</th>
+                <th>Teacher</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for class_id, class_info in timetable_data.items() %}
+            <tr>
+                <td>{{ class_info['Week'] }}</td>
+                <td>{{ class_info['Day'] }}</td>
+                <td>{{ class_info['Start Time'] }}</td>
+                <td>{{ class_info['End Time'] }}</td>
+                <td>{{ class_info['Subject'] }}</td>
+                <td>{{ class_info['Section'] }}</td>
+                <td>{{ class_info['Teacher'] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
