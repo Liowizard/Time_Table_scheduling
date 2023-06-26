@@ -17,7 +17,7 @@ def POST_timetables():
 
 
 
-@app.route('/TimeTable')
+@app.route('/')
 def Display_timetables():
     if len(data_storage)==0:
         return "update a data first"
@@ -29,8 +29,10 @@ def Display_timetables():
     sections=data.get("sections")
     num_weeks=data.get("num_weeks")
     timetables = timetables_data(days,subjects,sections,num_weeks)
+    # print(timetables)
 
     return render_template('timetable.html', timetable_data=timetables)
+
 
 
 if __name__ == '__main__':

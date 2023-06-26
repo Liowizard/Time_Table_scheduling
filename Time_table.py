@@ -5,7 +5,7 @@ import random
 
 DISTRIBUTE_WORK_LOAD_AMONG_STAFFS = True
 # days = ["Monday",'tuesday','wednesday','thursday','friday']
-days = ["Monday"]
+days = ["2023/06/23"]
                       
 subjects = {
         'Mathematics': [60, "theory", 1, ['Mathematics1', 'Mathematics2', 'Mathematics3'], 1],
